@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package auth;
 
-option go_package = "github.com/quenyu/grpc-sso/sso";
+option go_package = "alice.sso.v1;ssov1";
 
 service AuthService {
     rpc Login(LoginRequest) returns (LoginResponse) {}

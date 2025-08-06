@@ -4,8 +4,11 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/quenyu/grpc-sso/sso/internal"
+	"github.com/quenyu/grpc-sso/sso/internal/app"
+	"github.com/quenyu/grpc-sso/sso/internal/config"
 	"github.com/quenyu/grpc-sso/sso/internal/lib/logger/handlers/slogpretty"
 )
 
@@ -15,13 +18,23 @@ const (
 )
 
 func main() {
-	cfg, err := internal.NewConfig()
+	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("error initializing config: %s", err)
+		log.Fatal(err)
 	}
 
 	logger := setupLogger(cfg.Env)
 	logger.Info("starting sso server", "config", cfg)
+
+	application := app.New(logger, cfg.Grpc.Port, cfg.StoragePath[0], cfg.TokenTTL)
+
+	go application.GRPCServer.MustRun()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	<-stop
+	application.GRPCServer.Stop()
 }
 
 func setupLogger(env string) *slog.Logger {
