@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/quenyu/grpc-sso/sso/internal"
+	"github.com/quenyu/grpc-sso/sso/internal/lib/logger/handlers/slogpretty"
 )
 
 const (
@@ -28,7 +29,7 @@ func setupLogger(env string) *slog.Logger {
 
 	switch env {
 	case envLocal:
-		log = slog.New(slog.NewTextHandler(os.Stdout, nil))
+		log = setupPrettyLogger()
 	case envProd:
 		log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	default:
@@ -36,4 +37,16 @@ func setupLogger(env string) *slog.Logger {
 	}
 
 	return log
+}
+
+func setupPrettyLogger() *slog.Logger {
+	opts := slogpretty.PrettyHandlerOptions{
+		SlogOpts: &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		},
+	}
+
+	handler := opts.NewPrettyHandler(os.Stdout)
+
+	return slog.New(handler)
 }
